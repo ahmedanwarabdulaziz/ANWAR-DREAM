@@ -1,0 +1,224 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to get user data
+    function getUserData() {
+      return get(/databases/$(database)/documents/user_mappings/$(request.auth.uid)).data.customerId;
+    }
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && getUserData() == userId;
+    }
+    
+    function isBusinessOwner(businessId) {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/businesses/$(businessId)) &&
+             get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId == getUserData();
+    }
+    
+    function isCustomerOfBusiness(customerId, businessId) {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/customers/$(customerId)/businesses/$(businessId));
+    }
+
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+    match /users/{customerId} {
+      // Users can read their own data
+      allow read: if isAuthenticated() && (isOwner(customerId) || 
+                                           get(/databases/$(database)/documents/users/$(customerId)).data.role == 'admin');
+      
+      // Users can create their own account during signup
+      allow create: if isAuthenticated() && isOwner(customerId);
+      
+      // Users can update their own data (except role)
+      allow update: if isAuthenticated() && isOwner(customerId) &&
+                     (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+      
+      // Admins can read/update any user
+      allow read, update: if isAuthenticated() && 
+                             get(/databases/$(database)/documents/users/$(getUserData())).data.role == 'admin';
+    }
+    
+    // ============================================
+    // USER MAPPINGS COLLECTION
+    // ============================================
+    match /user_mappings/{uid} {
+      // Users can read their own mapping
+      allow read: if isAuthenticated() && request.auth.uid == uid;
+      
+      // Users can create their own mapping during signup
+      allow create: if isAuthenticated() && request.auth.uid == uid;
+    }
+    
+    // ============================================
+    // BUSINESSES COLLECTION
+    // ============================================
+    match /businesses/{businessId} {
+      // Anyone can read business info (for signup links)
+      allow read: if true;
+      
+      // Business owners can create/update their business
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && isBusinessOwner(businessId);
+      
+      // Admins can read/update any business
+      allow read, update: if isAuthenticated() && 
+                             get(/databases/$(database)/documents/users/$(getUserData())).data.role == 'admin';
+      
+      // ============================================
+      // CUSTOMER CLASSES SUBCOLLECTION
+      // ============================================
+      match /customerClasses/{classId} {
+        // Anyone can read classes (for signup links)
+        allow read: if true;
+        
+        // Business owners can create/update classes
+        allow create, update: if isAuthenticated() && isBusinessOwner(businessId);
+        
+        // Admins can manage any class
+        allow create, update: if isAuthenticated() && 
+                                 get(/databases/$(database)/documents/users/$(getUserData())).data.role == 'admin';
+      }
+      
+      // ============================================
+      // REFERRALS SUBCOLLECTION
+      // ============================================
+      match /referrals/{referralId} {
+        // Business owners can read their referrals
+        allow read: if isAuthenticated() && isBusinessOwner(businessId);
+        
+        // System can create referrals during signup
+        allow create: if isAuthenticated();
+        
+        // System can update referrals to mark as completed
+        allow update: if isAuthenticated();
+        
+        // Admins can read any referral
+        allow read: if isAuthenticated() && 
+                       get(/databases/$(database)/documents/users/$(getUserData())).data.role == 'admin';
+      }
+      
+      // ============================================
+      // CLASS MIGRATIONS SUBCOLLECTION
+      // ============================================
+      match /classMigrations/{migrationId} {
+        // Business owners can read migrations
+        allow read: if isAuthenticated() && isBusinessOwner(businessId);
+        
+        // System can create migrations
+        allow create: if isAuthenticated();
+        
+        // Admins can read any migration
+        allow read: if isAuthenticated() && 
+                       get(/databases/$(database)/documents/users/$(getUserData())).data.role == 'admin';
+      }
+    }
+    
+    // ============================================
+    // CUSTOMERS COLLECTION
+    // ============================================
+    match /customers/{customerId} {
+      // ============================================
+      // CUSTOMER-BUSINESS RELATIONSHIPS SUBCOLLECTION
+      // ============================================
+      match /businesses/{businessId} {
+        // Customers can read their own relationships
+        allow read: if isAuthenticated() && isOwner(customerId);
+        
+        // System can create relationships during signup
+        allow create: if isAuthenticated();
+        
+        // Customers can update their own relationship (for visits, etc.)
+        allow update: if isAuthenticated() && isOwner(customerId);
+        
+        // Business owners can read relationships for their business
+        allow read: if isAuthenticated() && isBusinessOwner(businessId);
+        
+        // Admins can read any relationship
+        allow read: if isAuthenticated() && 
+                       get(/databases/$(database)/documents/users/$(getUserData())).data.role == 'admin';
+      }
+      
+      // ============================================
+      // CUSTOMER REFERRAL LINKS SUBCOLLECTION
+      // ============================================
+      match /referralLinks/{businessId} {
+        // Customers can read their own referral links
+        allow read: if isAuthenticated() && isOwner(customerId);
+        
+        // System can create referral links
+        allow create: if isAuthenticated();
+        
+        // System can update referral links (for stats)
+        allow update: if isAuthenticated();
+        
+        // Business owners can read referral links for their business
+        allow read: if isAuthenticated() && isBusinessOwner(businessId);
+      }
+      
+      // ============================================
+      // POINTS TRANSACTIONS SUBCOLLECTION
+      // ============================================
+      match /transactions/{transactionId} {
+        // Customers can read their own transactions
+        allow read: if isAuthenticated() && isOwner(customerId);
+        
+        // System can create transactions
+        allow create: if isAuthenticated();
+        
+        // Transactions are immutable (no updates/deletes)
+        allow update, delete: if false;
+        
+        // Business owners can read transactions for their business
+        allow read: if isAuthenticated() && isBusinessOwner(transactionId);
+        
+        // Admins can read any transaction
+        allow read: if isAuthenticated() && 
+                       get(/databases/$(database)/documents/users/$(getUserData())).data.role == 'admin';
+      }
+    }
+    
+    // ============================================
+    // LEGACY COLLECTIONS (for backward compatibility)
+    // ============================================
+    
+    // Anonymous tokens collection - allow anyone
+    match /anonymous_tokens/{token} {
+      allow read, write: if true;
+    }
+    
+    // Device tokens collection - allow authenticated users
+    match /users/{customerId}/devices/{token} {
+      allow read, write: if isAuthenticated() && isOwner(customerId);
+    }
+    
+    // Business categories collection - allow authenticated users to read
+    match /business_categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    // Business registrations collection - allow anyone to create (for registration)
+    match /business_registrations/{registrationId} {
+      allow create: if true;
+      allow read, update, delete: if isAuthenticated();
+    }
+    
+    // Test connection collection - allow authenticated users
+    match /test_connection/{testId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
