@@ -4,9 +4,6 @@
     "app/api/**/*.ts": {
       "runtime": "nodejs18.x"
     }
-  },
-  "images": {
-    "domains": ["res.cloudinary.com", "images.unsplash.com"]
   }
 }
 
