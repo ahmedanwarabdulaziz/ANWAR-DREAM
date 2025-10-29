@@ -23,7 +23,6 @@ export async function generateSignedUploadParams(options: {
 
   return {
     signature,
-    timestamp,
     cloudName: 'dbo3xd0df',
     apiKey: '984549417134457',
     ...params
@@ -43,11 +42,17 @@ export async function uploadSignedFile(file: Buffer | string, options: {
   try {
     const uploadParams = await generateSignedUploadParams(options)
     
-    const result = await cloudinary.uploader.upload(file, {
+    // Convert Buffer to base64 if needed
+    const fileData = Buffer.isBuffer(file) 
+      ? `data:${options.resourceType || 'image'}/${options.folder?.split('/').pop()?.split('.').pop() || 'png'};base64,${file.toString('base64')}`
+      : file
+    
+    const result = await cloudinary.uploader.upload(fileData, {
       ...uploadParams,
       signature: uploadParams.signature,
-      timestamp: uploadParams.timestamp
-    })
+      timestamp: uploadParams.timestamp,
+      resource_type: options.resourceType || 'image'
+    } as any)
 
     return {
       success: true,

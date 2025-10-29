@@ -27,16 +27,22 @@ function initializeFirebaseAdmin() {
       return adminApp
     }
     
-    // Fallback to service account file
-    const serviceAccount = require('../../cadeala-cd61d-firebase-adminsdk-fbsvc-2cf96618f5.json')
-    const firebaseAdminConfig = {
-      credential: cert(serviceAccount),
-      projectId: "cadeala-cd61d",
-      storageBucket: "cadeala-cd61d.firebasestorage.app"
+    // Fallback to service account file (only in development, file should not be in repo)
+    try {
+      const serviceAccount = require('../../cadeala-cd61d-firebase-adminsdk-fbsvc-2cf96618f5.json')
+      const firebaseAdminConfig = {
+        credential: cert(serviceAccount),
+        projectId: "cadeala-cd61d",
+        storageBucket: "cadeala-cd61d.firebasestorage.app"
+      }
+      
+      adminApp = getApps().length === 0 ? initializeApp(firebaseAdminConfig) : getApps()[0]
+      return adminApp
+    } catch (fileError) {
+      // Service account file not found - this is expected in production
+      console.warn('Firebase Admin: Service account file not found. Using environment variables only.')
+      throw new Error('Firebase Admin initialization failed: No credentials provided')
     }
-    
-    adminApp = getApps().length === 0 ? initializeApp(firebaseAdminConfig) : getApps()[0]
-    return adminApp
   } catch (error) {
     console.error('Error initializing Firebase Admin:', error)
     return null

@@ -7,15 +7,8 @@ import { getStorage } from 'firebase-admin/storage'
 const firebaseAdminConfig = {
   credential: cert({
     projectId: "cadeala-cd61d",
-    privateKeyId: "2cf96618f52293a98faeb808e09e15cbc08fcefc",
     privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     clientEmail: "firebase-adminsdk-fbsvc@cadeala-cd61d.iam.gserviceaccount.com",
-    clientId: "109654961443050720184",
-    authUri: "https://accounts.google.com/o/oauth2/auth",
-    tokenUri: "https://oauth2.googleapis.com/token",
-    authProviderX509CertUrl: "https://www.googleapis.com/oauth2/v1/certs",
-    clientX509CertUrl: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40cadeala-cd61d.iam.gserviceaccount.com",
-    universeDomain: "googleapis.com"
   }),
   projectId: "cadeala-cd61d",
   storageBucket: "cadeala-cd61d.firebasestorage.app"

@@ -19,7 +19,7 @@ export interface UserData {
   email: string
   userId: string
   createdAt: string // Full timestamp as ISO string (date and time)
-  role: 'customer' | 'admin' | 'business'
+  role: 'customer' | 'admin' | 'business' | 'business-pending-approval'
   public: boolean // true if public signup, false if signed up from business/class
   businessAssignments: BusinessAssignment[] // Array of business assignments
   referrals: ReferralSummary[] // Array of referrals made by this customer

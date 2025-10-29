@@ -127,7 +127,7 @@ export interface ClassHistoryEntry {
   classId: string
   joinedAt: string // ISO timestamp
   migratedAt?: string // ISO timestamp (if migrated)
-  reason: 'initial_signup' | 'task_completed' | 'manual' | 'points_threshold' | 'referral'
+  reason: 'initial_signup' | 'task_completed' | 'manual' | 'points_threshold' | 'referral' | 'system'
 }
 
 /**

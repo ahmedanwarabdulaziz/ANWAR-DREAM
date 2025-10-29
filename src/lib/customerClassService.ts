@@ -254,21 +254,48 @@ export class CustomerClassService {
   static async updateCustomerClass(
     businessId: string,
     classId: string,
-    updates: Partial<Omit<CustomerClass, 'classId' | 'businessId' | 'createdAt'>>
+    updates: Partial<Omit<CustomerClass, 'classId' | 'businessId' | 'createdAt' | 'points' | 'benefits' | 'analytics'>> & {
+      points?: Partial<ClassPointsConfig>
+      benefits?: Partial<ClassBenefits>
+      analytics?: Partial<ClassAnalytics>
+    }
   ): Promise<void> {
     try {
       const classRef = doc(db, `businesses/${businessId}/customerClasses`, classId)
       
-      // Update analytics lastUpdated timestamp
-      const updatedData = {
-        ...updates,
-        analytics: updates.analytics ? {
-          ...updates.analytics,
-          lastUpdated: new Date().toISOString()
-        } : undefined
+      // Build update object with nested field updates
+      const updateData: any = {}
+      
+      // Handle top-level fields
+      if (updates.name !== undefined) updateData.name = updates.name
+      if (updates.description !== undefined) updateData.description = updates.description
+      if (updates.isActive !== undefined) updateData.isActive = updates.isActive
+      
+      // Handle nested points updates
+      if (updates.points) {
+        if (updates.points.welcomePoints !== undefined) updateData['points.welcomePoints'] = updates.points.welcomePoints
+        if (updates.points.referrerPoints !== undefined) updateData['points.referrerPoints'] = updates.points.referrerPoints
+        if (updates.points.referredPoints !== undefined) updateData['points.referredPoints'] = updates.points.referredPoints
+      }
+      
+      // Handle nested benefits updates
+      if (updates.benefits) {
+        updateData.benefits = updates.benefits
+      }
+      
+      // Always update analytics lastUpdated timestamp
+      updateData['analytics.lastUpdated'] = new Date().toISOString()
+      
+      // Update analytics fields if provided
+      if (updates.analytics) {
+        Object.keys(updates.analytics).forEach(key => {
+          if (updates.analytics && updates.analytics[key as keyof ClassAnalytics] !== undefined) {
+            updateData[`analytics.${key}`] = updates.analytics[key as keyof ClassAnalytics]
+          }
+        })
       }
 
-      await updateDoc(classRef, updatedData)
+      await updateDoc(classRef, updateData)
     } catch (error: any) {
       console.error('Error updating customer class:', error)
       throw new Error(`Failed to update customer class: ${error.message}`)
