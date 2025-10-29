@@ -20,6 +20,19 @@ export const metadata: Metadata = {
   },
   icons: {
     apple: "/icons/icon-192.png",
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+  },
+  openGraph: {
+    title: "Rewards App",
+    description: "Unlock rewards. Redeem in seconds.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Rewards App",
+    description: "Unlock rewards. Redeem in seconds.",
   },
 };
 
