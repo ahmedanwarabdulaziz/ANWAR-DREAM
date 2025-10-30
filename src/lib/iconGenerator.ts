@@ -19,3 +19,5 @@ console.log('Required sizes: 192x192, 512x512, and maskable versions')
 
 export { iconSvg }
 
+
+

@@ -147,3 +147,5 @@ The business categories system is now **production-ready** and fully integrated 
 
 **Ready for Production:** Admins can now easily manage business categories and types through a professional web interface!
 
+
+

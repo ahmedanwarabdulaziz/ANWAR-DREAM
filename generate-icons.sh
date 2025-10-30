@@ -32,3 +32,5 @@ echo "   3. Place the PNG files in public/icons/ directory"
 echo ""
 echo "🎯 For now, the app will work without icons, but they're needed for PWA functionality"
 
+
+

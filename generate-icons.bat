@@ -31,3 +31,5 @@ echo 🎯 For now, the app will work without icons, but they're needed for PWA f
 
 pause
 
+
+
