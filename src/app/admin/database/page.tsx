@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore'
+import { doc, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { Navbar } from '@/components/ui'
 import { DatabaseViewer } from '@/components/admin/DatabaseViewer'
 
 interface CollectionData {
@@ -44,11 +43,7 @@ export default function DatabaseManagementPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [customCollectionName, setCustomCollectionName] = useState('')
   const router = useRouter()
-
-  // Define the collections we want to manage (with fallback for dynamic detection)
-  const KNOWN_COLLECTIONS = ['users', 'user_mappings', 'anonymous_tokens', 'business_categories', 'business_registrations']
 
   useEffect(() => {
     loadCollections()
@@ -60,90 +55,32 @@ export default function DatabaseManagementPage() {
     setError(null)
     
     try {
-      const collectionsData: CollectionInfo[] = []
+      // Fetch all collections from the API endpoint which uses Firebase Admin SDK
+      const response = await fetch('/api/collections')
+      const data = await response.json()
       
-      // Try to load known collections first
-      for (const collectionName of KNOWN_COLLECTIONS) {
-        try {
-          const collectionRef = collection(db, collectionName)
-          const snapshot = await getDocs(collectionRef)
-          
-          const documents: CollectionData[] = []
-          snapshot.forEach((doc) => {
-            documents.push({
-              id: doc.id,
-              data: doc.data(),
-              ref: doc.ref
-            })
-          })
-
-          console.log(`Loaded ${collectionName}:`, documents.length, 'documents')
-          if (collectionName === 'users') {
-            console.log('Users data:', documents)
-          }
-
-          collectionsData.push({
-            name: collectionName,
-            count: documents.length,
-            documents: documents
-          })
-        } catch (err) {
-          console.error(`Error loading collection ${collectionName}:`, err)
-          // Still add the collection with 0 count so it shows up
-          collectionsData.push({
-            name: collectionName,
-            count: 0,
-            documents: []
-          })
-        }
-      }
-      
-      // Try to detect additional collections by checking for common patterns
-      const additionalCollections = [
-        'campaigns', 'rewards', 'transactions', 'points', 'devices', 
-        'notifications', 'settings', 'logs', 'analytics', 'reports',
-        'test_connection', 'business_logos', 'uploads', 'files'
-      ]
-      
-      for (const collectionName of additionalCollections) {
-        // Skip if already loaded
-        if (KNOWN_COLLECTIONS.includes(collectionName)) continue
+      if (data.success && data.collections) {
+        // Convert API response to CollectionInfo format
+        const collectionsData: CollectionInfo[] = data.collections.map((col: any) => ({
+          name: col.name,
+          count: col.count,
+          documents: col.documents.map((doc: any) => ({
+            id: doc.id,
+            data: doc.data,
+            ref: null // Document references aren't available from API
+          }))
+        }))
         
-        try {
-          const collectionRef = collection(db, collectionName)
-          const snapshot = await getDocs(collectionRef)
-          
-          // Only add if collection has documents
-          if (!snapshot.empty) {
-            const documents: CollectionData[] = []
-            snapshot.forEach((doc) => {
-              documents.push({
-                id: doc.id,
-                data: doc.data(),
-                ref: doc.ref
-              })
-            })
-
-            console.log(`Detected additional collection ${collectionName}:`, documents.length, 'documents')
-            collectionsData.push({
-              name: collectionName,
-              count: documents.length,
-              documents: documents
-            })
-          }
-        } catch (err) {
-          // Collection doesn't exist or no access - skip silently
-          console.log(`Collection ${collectionName} not found or no access`)
-        }
+        setCollections(collectionsData)
+        setSuccessMessage(`Database refreshed successfully! Found ${collectionsData.length} collections with ${collectionsData.reduce((sum, col) => sum + col.count, 0)} total documents.`)
+        setTimeout(() => setSuccessMessage(null), 5000)
+        console.log('All collections loaded successfully:', collectionsData)
+      } else {
+        throw new Error(data.error || 'Failed to load collections')
       }
-      
-      setCollections(collectionsData)
-      setSuccessMessage(`Database refreshed successfully! Found ${collectionsData.length} collections.`)
-      setTimeout(() => setSuccessMessage(null), 3000)
-      console.log('All collections loaded successfully:', collectionsData)
     } catch (error) {
       console.error('Error loading collections:', error)
-      setError('Failed to load collections')
+      setError(error instanceof Error ? error.message : 'Failed to load collections')
     } finally {
       setIsLoading(false)
     }
@@ -241,66 +178,13 @@ export default function DatabaseManagementPage() {
     setSelectedDocuments(new Set(docIds))
   }
 
-  const handleAddCustomCollection = async () => {
-    if (!customCollectionName.trim()) return
-    
-    const collectionName = customCollectionName.trim()
-    
-    // Check if collection already exists
-    const existingCollection = collections.find(c => c.name === collectionName)
-    if (existingCollection) {
-      setError(`Collection '${collectionName}' already exists`)
-      return
-    }
-    
-    setIsLoading(true)
-    setError(null)
-    
-    try {
-      const collectionRef = collection(db, collectionName)
-      const snapshot = await getDocs(collectionRef)
-      
-      const documents: CollectionData[] = []
-      snapshot.forEach((doc) => {
-        documents.push({
-          id: doc.id,
-          data: doc.data(),
-          ref: doc.ref
-        })
-      })
-
-      const newCollection: CollectionInfo = {
-        name: collectionName,
-        count: documents.length,
-        documents: documents
-      }
-      
-      setCollections(prev => [...prev, newCollection])
-      setCustomCollectionName('')
-      setSuccessMessage(`Added collection '${collectionName}' with ${documents.length} documents`)
-      setTimeout(() => setSuccessMessage(null), 3000)
-      
-      console.log(`Added custom collection ${collectionName}:`, documents.length, 'documents')
-    } catch (err) {
-      console.error(`Error loading custom collection ${collectionName}:`, err)
-      setError(`Failed to load collection '${collectionName}'. It may not exist or you may not have access.`)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <div className="container mx-auto max-w-7xl px-4 py-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-gray600">Loading database collections...</p>
-            </div>
-          </div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray600">Loading database collections...</p>
         </div>
       </div>
     )
@@ -308,8 +192,6 @@ export default function DatabaseManagementPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-      
       <main className="container mx-auto max-w-7xl px-4 py-8">
         {/* Header */}
         <motion.div 
@@ -328,28 +210,6 @@ export default function DatabaseManagementPage() {
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              {/* Add Custom Collection */}
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  placeholder="Collection name"
-                  value={customCollectionName}
-                  onChange={(e) => setCustomCollectionName(e.target.value)}
-                  className="px-3 py-2 border border-gray300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddCustomCollection()}
-                />
-                <button
-                  onClick={handleAddCustomCollection}
-                  disabled={isLoading || !customCollectionName.trim()}
-                  className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-1 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span>Add</span>
-                </button>
-              </div>
-              
               {/* Refresh Button */}
               <button
                 onClick={() => {
@@ -362,7 +222,7 @@ export default function DatabaseManagementPage() {
                 <svg className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>{isLoading ? 'Refreshing...' : 'Refresh'}</span>
+                <span>{isLoading ? 'Refreshing...' : 'Refresh All Collections'}</span>
               </button>
             </div>
           </div>

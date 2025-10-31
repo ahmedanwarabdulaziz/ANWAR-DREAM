@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { AuthService, UserData } from '@/lib/auth'
 import { auth } from '@/lib/firebase'
-import { Navbar } from '@/components/ui'
 
 export default function AdminDashboardPage() {
   const [userData, setUserData] = useState<UserData | null>(null)
@@ -68,8 +67,6 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-      
       <main className="container mx-auto max-w-7xl px-4 py-8">
         {/* Header */}
         <motion.div 
@@ -81,8 +78,11 @@ export default function AdminDashboardPage() {
           <h1 className="text-display text-h1 text-primary mb-2">
             Admin Dashboard
           </h1>
-          <p className="text-body text-gray600">
-            Welcome back, {userData.name}! Manage your rewards platform.
+          <p className="text-body text-gray700 font-medium text-lg">
+            {userData.name}
+          </p>
+          <p className="text-body text-gray600 mt-1">
+            Manage your rewards platform.
           </p>
         </motion.div>
 

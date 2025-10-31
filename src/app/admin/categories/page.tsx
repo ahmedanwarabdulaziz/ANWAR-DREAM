@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { collection, getDocs, addDoc, setDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { Navbar } from '@/components/ui'
 
 interface BusinessType {
   id: string
@@ -226,15 +225,10 @@ export default function BusinessCategoriesPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <div className="container mx-auto max-w-7xl px-4 py-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-gray600">Loading business categories...</p>
-            </div>
-          </div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray600">Loading business categories...</p>
         </div>
       </div>
     )
@@ -242,8 +236,6 @@ export default function BusinessCategoriesPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-      
       <main className="container mx-auto max-w-7xl px-4 py-8">
         {/* Header */}
         <div className="mb-8">

@@ -13,29 +13,95 @@ interface ClassListProps {
   onViewDetails: (customerClass: CustomerClass) => void
   onEdit: (customerClass: CustomerClass) => void
   onRefresh: () => void
+  onCreate?: () => void
 }
 
-export function ClassList({ classes, onViewDetails, onEdit, onRefresh }: ClassListProps) {
+export function ClassList({ classes, onViewDetails, onEdit, onRefresh, onCreate }: ClassListProps) {
   if (classes.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl p-12 shadow-sm border border-gray200 text-center"
-      >
-        <div className="w-16 h-16 bg-gray100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="text-3xl">📋</span>
-        </div>
-        <h3 className="text-lg font-semibold text-gray900 mb-2">No Customer Classes Yet</h3>
-        <p className="text-gray600 mb-6">
-          Create your first custom customer class to organize your customers
-        </p>
-      </motion.div>
+      <div>
+        {/* Header with Add button */}
+        {onCreate && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 flex items-center justify-between"
+          >
+            <div>
+              <h1 className="text-display text-h1 text-primary mb-2">
+                Customer Classes
+              </h1>
+              <p className="text-body text-gray600">
+                Manage your customer classes and configure points settings
+              </p>
+            </div>
+            <button
+              onClick={onCreate}
+              className="w-10 h-10 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center shadow-sm"
+              title="Create new class"
+              aria-label="Create new class"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </motion.div>
+        )}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl p-12 shadow-sm border border-gray200 text-center"
+        >
+          <div className="w-16 h-16 bg-gray100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">📋</span>
+          </div>
+          <h3 className="text-lg font-semibold text-gray900 mb-2">No Customer Classes Yet</h3>
+          <p className="text-gray600 mb-6">
+            Create your first custom customer class to organize your customers
+          </p>
+          {onCreate && (
+            <button
+              onClick={onCreate}
+              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              Create Your First Class
+            </button>
+          )}
+        </motion.div>
+      </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div>
+      {/* Header with Add button */}
+      {onCreate && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 flex items-center justify-between"
+        >
+          <div>
+            <h1 className="text-display text-h1 text-primary mb-2">
+              Customer Classes
+            </h1>
+            <p className="text-body text-gray600">
+              Manage your customer classes and configure points settings
+            </p>
+          </div>
+          <button
+            onClick={onCreate}
+            className="w-10 h-10 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center shadow-sm"
+            title="Create new class"
+            aria-label="Create new class"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        </motion.div>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {classes.map((customerClass, index) => (
         <motion.div
           key={customerClass.classId}
@@ -116,24 +182,27 @@ export function ClassList({ classes, onViewDetails, onEdit, onRefresh }: ClassLi
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex items-center justify-between gap-2">
             <button
               onClick={() => onViewDetails(customerClass)}
               className="flex-1 px-4 py-2 bg-gray100 text-gray700 rounded-lg hover:bg-gray200 transition-colors text-sm font-medium"
             >
               View Details
             </button>
-            {customerClass.type === 'custom' && (
-              <button
-                onClick={() => onEdit(customerClass)}
-                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-              >
-                Edit
-              </button>
-            )}
+            <button
+              onClick={() => onEdit(customerClass)}
+              className="px-3 py-2 bg-gray100 text-gray700 rounded-lg hover:bg-gray200 transition-colors"
+              title="Edit class settings"
+              aria-label="Edit class"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
           </div>
         </motion.div>
       ))}
+      </div>
     </div>
   )
 }

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { AuthService, UserData } from '@/lib/auth'
 import { auth } from '@/lib/firebase'
-import { Navbar } from '@/components/ui'
 import { BusinessService } from '@/lib/businessService'
 
 export default function BusinessDashboardPage() {
@@ -27,16 +26,11 @@ export default function BusinessDashboardPage() {
           const data = await AuthService.getUserData(user.uid)
           if (data && data.role === 'business') {
             setUserData(data)
-            
             // Ensure business exists (create if missing)
             let business = await BusinessService.getBusinessByOwner(data.userId)
             if (!business) {
-              // Business doesn't exist - initialize it
-              console.log('Business not found, initializing...')
               business = await BusinessService.initializeBusinessForUser(data.userId)
-              console.log('Business initialized:', business.businessId)
             }
-            
             // TODO: Fetch business stats from Firestore
             setStats({
               totalCustomers: 89,
@@ -46,7 +40,6 @@ export default function BusinessDashboardPage() {
               monthlyRevenue: 2840
             })
           } else {
-            // Redirect non-business users
             router.push('/customer/dashboard')
           }
         } catch (error) {
@@ -79,8 +72,6 @@ export default function BusinessDashboardPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-      
       <main className="container mx-auto max-w-7xl px-4 py-8">
         {/* Header */}
         <motion.div 
@@ -92,8 +83,11 @@ export default function BusinessDashboardPage() {
           <h1 className="text-display text-h1 text-primary mb-2">
             Business Dashboard
           </h1>
-          <p className="text-body text-gray600">
-            Welcome back, {userData.name}! Manage your business rewards program.
+          <p className="text-body text-gray700 font-medium text-lg">
+            {userData.name}
+          </p>
+          <p className="text-body text-gray600 mt-1">
+            Manage your business rewards program.
           </p>
         </motion.div>
 

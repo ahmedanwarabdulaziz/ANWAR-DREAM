@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Navbar, Button, RewardTile, InstallPrompt } from '@/components/ui'
+import { Button, RewardTile, InstallPrompt } from '@/components/ui'
 import { staggerContainer, staggerItem } from '@/components/providers/MotionProvider'
 import { BusinessRegistrationModal } from '@/components/BusinessRegistrationModal'
 import { useAuth } from '@/hooks/useAuth'
@@ -13,8 +13,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-      
       <main className="container mx-auto max-w-6xl px-4 py-12">
         <motion.div 
           className="text-center"

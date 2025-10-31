@@ -47,6 +47,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
               <Dialog.Panel
                 className={clsx(
                   'w-full transform overflow-hidden rounded-xl bg-surface shadow-xl transition-all',
+                  'max-h-[90vh]',
                   sizeClasses[size]
                 )}
               >
@@ -95,7 +96,7 @@ interface ModalContentProps {
 
 export function ModalContent({ children }: ModalContentProps) {
   return (
-    <div className="p-6">
+    <div className="p-6 max-h-[70vh] overflow-y-auto">
       {children}
     </div>
   )

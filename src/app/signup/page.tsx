@@ -8,7 +8,6 @@ import { SignupProgressModal } from '@/components/auth/SignupProgressModal'
 import { AuthService, SignupData } from '@/lib/auth'
 import { BusinessService } from '@/lib/businessService'
 import { RoleRouter } from '@/lib/roleRouter'
-import { Navbar } from '@/components/ui'
 import { SignupURLParams, Business } from '@/lib/types/customerClass'
 
 function SignupPageContent() {
@@ -110,8 +109,6 @@ function SignupPageContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-      
       {/* Signup Progress Modal */}
       <SignupProgressModal
         isOpen={isLoading}

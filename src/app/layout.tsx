@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { MotionProvider } from "@/components/providers/MotionProvider";
+import { LayoutWrapper } from "@/components/LayoutWrapper";
 import "./globals.css";
 
 const inter = Inter({
@@ -19,9 +20,9 @@ export const metadata: Metadata = {
     title: "Rewards App",
   },
   icons: {
-    apple: "/icons/icon-192.png",
+    apple: "/icons/icon.svg",
     icon: [
-      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
     ],
   },
   openGraph: {
@@ -52,17 +53,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Rewards App" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <link rel="icon" href="/icons/icon.svg" />
         <link rel="manifest" href="/manifest.webmanifest" />
       </head>
       <body
         className={`${inter.variable} antialiased`}
       >
         <MotionProvider>
-          {children}
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
         </MotionProvider>
       </body>
     </html>

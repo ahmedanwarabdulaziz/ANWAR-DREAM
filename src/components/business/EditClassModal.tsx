@@ -57,7 +57,8 @@ export function EditClassModal({ isOpen, onClose, customerClass, onSave }: EditC
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.name.trim()) {
+    // Only validate name for custom classes (permanent classes can't be edited)
+    if (customerClass.type === 'custom' && !formData.name.trim()) {
       newErrors.name = 'Class name is required'
     }
 
@@ -88,9 +89,13 @@ export function EditClassModal({ isOpen, onClose, customerClass, onSave }: EditC
 
     setIsLoading(true)
     try {
-      await onSave(customerClass.classId, {
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
+      // Build updates object - exclude name/description for permanent classes
+      const updates: {
+        name?: string
+        description?: string
+        points?: Partial<ClassPointsConfig>
+        benefits?: Partial<ClassBenefits>
+      } = {
         points: {
           welcomePoints: parseInt(formData.welcomePoints),
           referrerPoints: parseInt(formData.referrerPoints),
@@ -103,7 +108,15 @@ export function EditClassModal({ isOpen, onClose, customerClass, onSave }: EditC
           freeShipping: formData.freeShipping,
           earlyAccess: formData.earlyAccess
         }
-      })
+      }
+
+      // Only include name/description for custom classes
+      if (customerClass.type === 'custom') {
+        updates.name = formData.name.trim()
+        updates.description = formData.description.trim() || undefined
+      }
+
+      await onSave(customerClass.classId, updates)
     } catch (error) {
       console.error('Error updating class:', error)
     } finally {
@@ -149,10 +162,15 @@ export function EditClassModal({ isOpen, onClose, customerClass, onSave }: EditC
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-gray200 focus:outline-none focus:ring-2 focus:ring-primary"
+                className={`w-full px-4 py-2 rounded-lg border border-gray200 focus:outline-none focus:ring-2 focus:ring-primary ${
+                  customerClass.type === 'permanent' ? 'bg-gray50 text-gray500' : ''
+                }`}
                 rows={3}
-                disabled={isLoading}
+                disabled={isLoading || customerClass.type === 'permanent'}
               />
+              {customerClass.type === 'permanent' && (
+                <p className="mt-1 text-xs text-gray600">Permanent classes cannot have their description changed</p>
+              )}
             </div>
 
             {/* Points Configuration */}

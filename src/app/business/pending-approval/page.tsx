@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { AuthService, UserData } from '@/lib/auth'
 import { auth } from '@/lib/firebase'
-import { Navbar } from '@/components/ui'
 
 export default function BusinessPendingApprovalPage() {
   const [userData, setUserData] = useState<UserData | null>(null)
@@ -69,8 +68,6 @@ export default function BusinessPendingApprovalPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-      
       <main className="container mx-auto max-w-4xl px-4 py-8">
         {/* Header */}
         <motion.div 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { UserManager } from '@/server/firebase-admin'
+import { adminDb } from '@/server/firebase-admin'
 import { z } from 'zod'
 
 // Validation schemas
@@ -47,10 +48,38 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/users - List users with pagination
+// GET /api/users - List users with pagination or get user by customer ID
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
+    const customerId = searchParams.get('customerId')
+    
+    // If customerId is provided, return single user
+    if (customerId) {
+      const db = adminDb()
+      if (!db) {
+        return NextResponse.json(
+          { error: 'Firebase Admin not initialized' },
+          { status: 500 }
+        )
+      }
+
+      const userDoc = await db.collection('users').doc(customerId).get()
+
+      if (!userDoc.exists) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        )
+      }
+
+      return NextResponse.json({
+        success: true,
+        user: userDoc.data()
+      })
+    }
+    
+    // Otherwise, list all users (Auth users)
     const maxResults = parseInt(searchParams.get('maxResults') || '1000')
     const pageToken = searchParams.get('pageToken') || undefined
     
@@ -83,9 +112,9 @@ export async function GET(request: NextRequest) {
       hasMore: !!result.pageToken
     })
   } catch (error: any) {
-    console.error('Error listing users:', error)
+    console.error('Error in users route:', error)
     return NextResponse.json(
-      { error: 'Failed to list users', details: error.message },
+      { error: 'Failed to process request', details: error.message },
       { status: 500 }
     )
   }

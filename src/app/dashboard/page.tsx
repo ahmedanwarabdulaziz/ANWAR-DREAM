@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Navbar } from '@/components/ui'
 import { AuthService, UserData } from '@/lib/auth'
 import { auth } from '@/lib/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -55,8 +54,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-      
       <main className="container mx-auto max-w-6xl px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

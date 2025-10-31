@@ -3,7 +3,7 @@
  * Handles business registration, creation, and automatic customer class setup
  */
 
-import { doc, setDoc, getDoc, collection, getDocs, query, where } from 'firebase/firestore'
+import { doc, setDoc, getDoc, updateDoc, deleteField, collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { BusinessIDGenerator } from '@/lib/businessId'
 import { ClassIDGenerator } from '@/lib/classId'
@@ -315,16 +315,51 @@ export class BusinessService {
     settings: Partial<BusinessSettings>
   ): Promise<void> {
     try {
+      // Get existing business to preserve current settings
+      const business = await this.getBusiness(businessId)
+      if (!business) {
+        throw new Error('Business not found')
+      }
+
+      // Merge new settings with existing settings
       // Ensure pointsToDollarRate always remains 100 (permanent rule)
-      const updatedSettings = {
+      const updatedSettings: BusinessSettings = {
+        ...business.settings,
         ...settings,
         pointsToDollarRate: POINTS_TO_DOLLAR_RATE // Force permanent value
       }
 
-      await setDoc(
+      // Build settings object without undefined values
+      // Firestore doesn't allow undefined values, so we need to exclude them
+      const cleanSettings: any = {
+        defaultReferralRouting: updatedSettings.defaultReferralRouting,
+        pointsToDollarRate: updatedSettings.pointsToDollarRate,
+        allowCustomClasses: updatedSettings.allowCustomClasses
+      }
+      
+      // Only include customReferralClassId if routing is 'custom' and value is provided
+      if (updatedSettings.defaultReferralRouting === 'custom' && updatedSettings.customReferralClassId) {
+        cleanSettings.customReferralClassId = updatedSettings.customReferralClassId
+      }
+      
+      // If switching away from 'custom', we need to delete the field
+      const needsFieldDeletion = business.settings.defaultReferralRouting === 'custom' && 
+                                  updatedSettings.defaultReferralRouting !== 'custom'
+
+      if (needsFieldDeletion) {
+        // Delete customReferralClassId field first, then update settings
+        await updateDoc(
+          doc(db, 'businesses', businessId),
+          {
+            'settings.customReferralClassId': deleteField()
+          }
+        )
+      }
+
+      // Update settings (always do this after field deletion if needed)
+      await updateDoc(
         doc(db, 'businesses', businessId),
-        { settings: updatedSettings },
-        { merge: true }
+        { settings: cleanSettings }
       )
     } catch (error: any) {
       console.error('Error updating business settings:', error)

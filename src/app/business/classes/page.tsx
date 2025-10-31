@@ -13,7 +13,6 @@ import { auth } from '@/lib/firebase'
 import { BusinessService } from '@/lib/businessService'
 import { CustomerClassService } from '@/lib/customerClassService'
 import { CustomerClass, ClassPointsConfig, ClassBenefits } from '@/lib/types/customerClass'
-import { Navbar } from '@/components/ui'
 import { ClassList, CreateClassModal, EditClassModal, ClassDetailsModal } from '@/components/business'
 
 export default function CustomerClassesPage() {
@@ -151,13 +150,10 @@ export default function CustomerClassesPage() {
   if (!business && !isLoading) {
     return (
       <div className="min-h-screen bg-white">
-        <Navbar />
         <main className="container mx-auto max-w-7xl px-4 py-8">
           <div className="text-center py-12">
             <h1 className="text-h1 text-primary mb-4">Setting Up Your Business</h1>
-            <p className="text-gray600 mb-6">
-              Please wait while we set up your business account...
-            </p>
+            <p className="text-gray600 mb-6">Please wait while we set up your business account...</p>
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           </div>
         </main>
@@ -167,40 +163,14 @@ export default function CustomerClassesPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-      
       <main className="container mx-auto max-w-7xl px-4 py-8">
-        {/* Header */}
-        <motion.div 
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-display text-h1 text-primary mb-2">
-                Customer Classes
-              </h1>
-              <p className="text-body text-gray600">
-                Manage customer classes and configure points for {business.name}
-              </p>
-            </div>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors font-medium w-full sm:w-auto"
-            >
-              + Create New Class
-            </button>
-          </div>
-        </motion.div>
-
         {/* Classes List */}
         <ClassList
           classes={classes}
           onViewDetails={handleViewDetails}
           onEdit={handleEdit}
           onRefresh={() => loadClasses(business.businessId)}
+          onCreate={() => setIsCreateModalOpen(true)}
         />
 
         {/* Modals */}

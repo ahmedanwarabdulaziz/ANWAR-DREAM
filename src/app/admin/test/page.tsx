@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Navbar } from '@/components/ui'
 
 export default function AdminDashboardTestPage() {
   const [stats, setStats] = useState({
@@ -15,8 +14,6 @@ export default function AdminDashboardTestPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-      
       <main className="container mx-auto max-w-7xl px-4 py-8">
         {/* Header */}
         <motion.div 
@@ -237,6 +234,10 @@ export default function AdminDashboardTestPage() {
     </div>
   )
 }
+
+
+
+
 
 
 

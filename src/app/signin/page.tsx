@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { AuthService } from '@/lib/auth'
 import { RoleRouter } from '@/lib/roleRouter'
-import { Navbar } from '@/components/ui'
 import { SigninForm } from '@/components/ui/SigninForm'
 
 export default function SigninPage() {
@@ -32,8 +31,6 @@ export default function SigninPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-      
       <main className="container mx-auto max-w-md px-4 py-12">
         <motion.div
           className="text-center mb-8"
@@ -97,6 +94,10 @@ export default function SigninPage() {
     </div>
   )
 }
+
+
+
+
 
 
 
